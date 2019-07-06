@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>MobileNet Demo</title>
+  <!-- Load TensorFlow.js. This is required to use MobileNet. -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.1"></script>
+  <!-- Load the MobileNet model. -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@1.0.0"></script>
+  <script src="main.js"></script>
+</head>
+<body onload="setup()">
+  <div style="text-align:center">
+    <h1>What's that image</h1>
+    <video id="video">Video stream not available.</video>
+    <pre id="predictions"></pre>
+    <canvas id="canvas" style="display:none"></canvas>
+  </div>
+</body>
+</html>
