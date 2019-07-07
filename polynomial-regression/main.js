@@ -1,18 +1,22 @@
+// Ecuation for a polynomial (curved line) is this
+//        Y = A * X^2 + B * X + C
+// Similar to linear regression but now we have
+// 3 variables to optimize (A, B and C) instead of (A and C)
+
 let LOSS = 0;
 let CURRENT_EPOCH = 0;
 
-// This will store mouse x,y points that have been scaled from 0->1
+let A = -0.4;
+let B = 2;
+let C = 100;
+
 let Xs = [];
 let Ys = [];
 
 const MAX_EPOCHS = 300;
 
-// Play arround with these numbers to see what happens
-let A = -0.4;
-let C = 200;
-
-// Calculate Y from X
-const getY = x => A * x + C;
+// Calculate the Y from X
+const getY = x => A * Math.pow(x,2) + B * x + C;
 
 // this scales a value from 0 to max to 0 to 1
 const norm = (x, max) => map(x, 0, max, 0, 1);
@@ -24,9 +28,11 @@ const denorm = (x, max) => map(x, 0, 1, 0, max);
 const denormX = x => denorm(x, windowWidth);
 const denormY = y => denorm(y, windowHeight);
 
-// -- Tensorflow code -- //
+// ------ Start Tensorflow code ------ //
+
 // create variables to store the weights of A and C
 const a = tf.variable(tf.scalar(Math.random()));
+const b = tf.variable(tf.scalar(Math.random()));
 const c = tf.variable(tf.scalar(Math.random()));
 
 // setup the optimizer
@@ -40,8 +46,8 @@ const optimizer = tf.train.sgd(learningRate);
 // array of predicted Y values based on the current
 // values of m and c weights
 function predict(x) {
-  // y = m * x + b
-  return a.mul(x).add(c);
+  // y = A * x^2 + b * x + C
+  return a.mul(x.square()).add(b.mul(x)).add(c);
 }
 
 function mouseClicked() {
@@ -88,8 +94,9 @@ async function train(numIterations = 1) {
         });
 
         A = a.dataSync()[0];
+        B = b.dataSync()[0];
         C = c.dataSync()[0];
-        console.log(A, C);
+        console.log(A, B, C);
       });
 
       // this let draw something in the page
@@ -98,6 +105,8 @@ async function train(numIterations = 1) {
     }
   }
 }
+
+// ------ End Tensorflow code ------ //
 
 // this is only called once
 function setup() {
@@ -116,15 +125,14 @@ function drawPoints() {
   noFill();
 }
 
-function drawLine() {
-  stroke(51);
-  const x1 = denormX(0);
-  const y1 = denormY(getY(0));
-  const x2 = denormX(1);
-  const y2 = denormY(getY(1));
-
-  line(x1,y1, x2, y2);
-  noStroke();
+function draw_curve() {
+  for (let x = 0; x < windowWidth; x += 10) {
+    const y = getY(normX(x));
+    // console.log(y);
+    // console.log(x, denormY(y));
+    fill(51);
+    ellipse(x, denormY(y), 5);
+  }
 }
 
 function drawLoss() {
@@ -136,11 +144,21 @@ function drawLoss() {
   noFill();
 }
 
+function draw_iteration() {
+  noStroke();
+  fill(0);
+  textSize(20);
+  textFont("monospace");
+  text(CURRENT_EPOCH, windowWidth - 40, windowHeight - 20);
+  noFill();
+}
+
 // this is called many times and draws the page
 function draw() {
   console.log('drawCalled');
   background(255);
-  drawLine();
+  draw_curve();
   drawPoints();
   drawLoss();
+  draw_iteration();
 }
