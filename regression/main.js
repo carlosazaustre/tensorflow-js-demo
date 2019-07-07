@@ -1,8 +1,11 @@
 let LOSS = 0;
+let CURRENT_EPOCH = 0;
 
 // This will store mouse x,y points that have been scaled from 0->1
 let Xs = [];
 let Ys = [];
+
+const MAX_EPOCHS = 300;
 
 // Play arround with these numbers to see what happens
 let A = -0.4;
@@ -21,6 +24,26 @@ const denorm = (x, max) => map(x, 0, 1, 0, max);
 const denormX = x => denorm(x, windowWidth);
 const denormY = y => denorm(y, windowHeight);
 
+// -- Tensorflow code -- //
+// create variables to store the weights of A and C
+const a = tf.variable(tf.scalar(Math.random()));
+const c = tf.variable(tf.scalar(Math.random()));
+
+// setup the optimizer
+const learningRate = 0.5;
+
+// create an optimizer, this will be used to change
+// the wights (m and c) to minimise the loss function
+const optimizer = tf.train.sgd(learningRate);
+
+// is passed in an array of X values and returns an
+// array of predicted Y values based on the current
+// values of m and c weights
+function predict(x) {
+  // y = m * x + b
+  return a.mul(x).add(c);
+}
+
 function mouseClicked() {
   console.log('mouseClicked');
   console.log(mouseX, mouseY);
@@ -37,27 +60,41 @@ function mouseClicked() {
 // Y value from the line.
 // The closer the mouse clicks are to the line the lower 
 // the value of the loss!
-function loss() {
-  let squaredDiff = 0;
+function loss(predictedYs, actualYs) {
+  // Mean squared error
+  let x = predictedYs
+    .sub(actualYs)
+    .square()
+    .mean()
+  LOSS = x.dataSync()[0];
 
-  // for each point the user clicked
-  for (let i = 0; i < Xs.length; i++) {
-    // Get the normalised value of x and y for the click
-    let x = Xs[i];
-    let y = Ys[i];
-    // Then use the equation of the line to get
-    // a value for y of the line
-    let predictedY = normY(getY(denormX(x)));
+  return x;
+}
 
-    // For each mouse click, the x of the mouse click
-    // and the x of the line is going to be the same.
-    // What is different is the y of the mouse click
-    // and the y of the line. We figure out the squared
-    // distance between those.
-    squaredDiff += Math.pow(predictedY - y, 2);
+// pass in the actualXs and the actualYs (from the mouse clicks)
+// use the actualXs to calculate the predictedYs
+// pass predictedYs and actualYs to the optimizer and
+// try to minimize that value
+async function train(numIterations = 1) {
+  if (Xs.length) {
+    for (CURRENT_EPOCH = 0; CURRENT_EPOCH < numIterations; CURRENT_EPOCH++) {
+      tf.tidy(() => {
+        const actualXs = tf.tensor(Xs, [Xs.length, 1]);
+        const actualYs = tf.tensor(Ys, [Ys.length, 1]);
+
+        optimizer.minimize(() => {
+          let predictedYs = predict(actualXs);
+          return loss(predictedYs, actualYs);
+        });
+
+        A = a.dataSync()[0];
+        C = c.dataSync()[0];
+        console.log(A, C);
+      });
+
+      await tf.nextFrame();
+    }
   }
-  let mean = (LOSS = squaredDiff / Xs.length);
-  console.log('Loss', LOSS);
 }
 
 // this is only called once
