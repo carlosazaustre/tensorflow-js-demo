@@ -49,3 +49,18 @@ var b = b.transpose();
 b.print();
 console.log(b.rank)
 console.log(b.shape)
+
+// Add
+var a = tf.tensor([3, 8, 4, 6], [2, 2]);
+var b = tf.tensor([[4, 0], [1, -9]]);
+a.add(b).print();
+var c = tf.tensor(4);
+a.add(c).print();
+// Substration
+a.sub(b).print();
+// Multiplication
+b.mul(2).print();
+
+var a = tf.tensor([[1, 2], [3, 4]]);
+var b = tf.tensor([[2, 3], [4, 5]]);
+a.mul(b).print();
