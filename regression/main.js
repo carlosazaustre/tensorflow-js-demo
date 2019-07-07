@@ -45,14 +45,14 @@ function predict(x) {
 }
 
 function mouseClicked() {
-  console.log('mouseClicked');
+  console.log('mouseClicked', `${mouseX}, ${mouseY}`);
   console.log(mouseX, mouseY);
   // normalize the coordinates to the current window
   Xs.push(normX(mouseX));
   Ys.push(normY(mouseY));
 
-  // calculate the loss across all points
-  loss();
+  // everytime we click a mouse we run or this many epochs
+  train(MAX_EPOCHS);
 }
 
 // The loss is calculated as the mean squared difference
@@ -92,6 +92,8 @@ async function train(numIterations = 1) {
         console.log(A, C);
       });
 
+      // this let draw something in the page
+      // because tf take all the CPU in the browser
       await tf.nextFrame();
     }
   }
@@ -116,10 +118,10 @@ function drawPoints() {
 
 function drawLine() {
   stroke(51);
-  const x1 = 0;
-  const y1 = getY(x1);
-  const x2 = windowWidth;
-  const y2 = getY(x2);
+  const x1 = denormX(0);
+  const y1 = denormY(getY(0));
+  const x2 = denormX(1);
+  const y2 = denormY(getY(1));
 
   line(x1,y1, x2, y2);
   noStroke();
